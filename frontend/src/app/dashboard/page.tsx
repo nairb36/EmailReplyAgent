@@ -67,7 +67,7 @@ export default function Dashboard() {
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         {/* Email List */}
-        <div className="w-1/3 border-r border-gray-200 bg-white overflow-y-auto">
+        <div className="w-[380px] flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
           {loadingEmails ? (
             <div className="p-4 space-y-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -101,7 +101,7 @@ export default function Dashboard() {
         </div>
 
         {/* Email Detail */}
-        <div className="flex-1 bg-white overflow-y-auto">
+        <div className="flex-1 bg-gray-50 overflow-y-auto">
           <EmailDetailComponent email={emailDetail} loading={loadingDetail} />
         </div>
       </div>
