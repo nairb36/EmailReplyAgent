@@ -19,6 +19,7 @@ env/
 credentials.json
 token.json
 token.pickle
+temp_keys.txt
 
 # IDE
 .vscode/
@@ -32,3 +33,12 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel
+
+# Allow .env.example files
+!.env.example
