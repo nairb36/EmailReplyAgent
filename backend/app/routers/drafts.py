@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_current_user
-from app.models.draft import DraftRequest, DraftResponse
-from app.services import auth_service, gmail_service, llm_service
+from app.models.draft import DraftRequest, DraftResponse, SendRequest, SendResponse
+from app.services import auth_service, gmail_service, llm_service, supabase_service
 
 router = APIRouter(prefix="/api/drafts", tags=["drafts"])
 
@@ -60,9 +62,81 @@ async def generate_draft(
     if not subject.lower().startswith("re:"):
         subject = f"Re: {subject}"
 
+    # Store draft in Supabase
+    try:
+        draft_record = supabase_service.create_draft(
+            user_id=user["id"],
+            gmail_message_id=request.message_id,
+            thread_id=email_detail.thread_id,
+            to_address=email_detail.from_address,
+            subject=subject,
+            ai_draft_body=draft_body,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to store draft: {str(e)}",
+        )
+
     return DraftResponse(
+        draft_id=draft_record["id"],
         message_id=request.message_id,
+        thread_id=email_detail.thread_id,
         draft_body=draft_body,
         subject=subject,
         to_address=email_detail.from_address,
+    )
+
+
+@router.post("/send", response_model=SendResponse)
+async def send_draft(
+    request: SendRequest,
+    user: dict = Depends(get_current_user),
+):
+    encrypted_token = user.get("google_access_token")
+    if not encrypted_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No Google access token found",
+        )
+
+    try:
+        access_token = auth_service.decrypt_token(encrypted_token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Failed to decrypt access token",
+        )
+
+    # Send via Gmail API
+    try:
+        result = gmail_service.send_reply(
+            access_token=access_token,
+            to_address=request.to_address,
+            subject=request.subject,
+            body_text=request.final_body,
+            thread_id=request.thread_id,
+            message_id=request.message_id,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to send email: {str(e)}",
+        )
+
+    # Update draft record with final body and sent timestamp
+    try:
+        supabase_service.update_draft_sent(
+            draft_id=request.draft_id,
+            final_body=request.final_body,
+            sent_at=datetime.now(timezone.utc),
+        )
+    except Exception as e:
+        # Email was sent but DB update failed — log but don't fail the request
+        print(f"Warning: Failed to update draft record: {e}")
+
+    return SendResponse(
+        success=True,
+        gmail_message_id=result.get("id", ""),
+        draft_id=request.draft_id,
     )

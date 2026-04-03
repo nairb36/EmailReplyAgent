@@ -2,6 +2,7 @@ import base64
 import email.utils
 import re
 from datetime import datetime, timezone
+from email.mime.text import MIMEText
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build, Resource
@@ -125,6 +126,39 @@ def fetch_inbox(
         "messages": messages,
         "next_page_token": next_page_token,
     }
+
+
+def send_reply(
+    access_token: str,
+    to_address: str,
+    subject: str,
+    body_text: str,
+    thread_id: str | None = None,
+    message_id: str | None = None,
+) -> dict:
+    """Send a reply email via Gmail API."""
+    service = build_gmail_client(access_token)
+
+    message = MIMEText(body_text)
+    message["to"] = to_address
+    message["subject"] = subject
+    if message_id:
+        message["In-Reply-To"] = message_id
+        message["References"] = message_id
+
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+
+    send_body: dict = {"raw": raw}
+    if thread_id:
+        send_body["threadId"] = thread_id
+
+    result = (
+        service.users()
+        .messages()
+        .send(userId="me", body=send_body)
+        .execute()
+    )
+    return result
 
 
 def fetch_email_detail(access_token: str, message_id: str) -> EmailDetail:

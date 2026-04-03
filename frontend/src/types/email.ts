@@ -18,8 +18,16 @@ export interface EmailListResponse {
 }
 
 export interface DraftResponse {
+  draft_id: string;
   message_id: string;
+  thread_id?: string;
   draft_body: string;
   subject: string;
   to_address: string;
+}
+
+export interface SendResponse {
+  success: boolean;
+  gmail_message_id: string;
+  draft_id: string;
 }

@@ -75,3 +75,55 @@ def update_user_tokens(
     if expiry is not None:
         payload["google_token_expiry"] = expiry.isoformat()
     client.table("users").update(payload).eq("id", user_id).execute()
+
+
+def create_draft(
+    user_id: str,
+    gmail_message_id: str,
+    thread_id: str | None,
+    to_address: str,
+    subject: str,
+    ai_draft_body: str,
+) -> dict:
+    client = get_supabase_client()
+    payload = {
+        "user_id": user_id,
+        "gmail_message_id": gmail_message_id,
+        "thread_id": thread_id,
+        "to_address": to_address,
+        "subject": subject,
+        "ai_draft_body": ai_draft_body,
+    }
+    result = client.table("drafts").insert(payload).execute()
+    return result.data[0]
+
+
+def update_draft_sent(
+    draft_id: str,
+    final_body: str,
+    sent_at: datetime,
+) -> dict:
+    client = get_supabase_client()
+    payload = {
+        "final_body": final_body,
+        "sent_at": sent_at.isoformat(),
+    }
+    result = (
+        client.table("drafts")
+        .update(payload)
+        .eq("id", draft_id)
+        .execute()
+    )
+    return result.data[0]
+
+
+def get_drafts_by_user(user_id: str) -> list[dict]:
+    client = get_supabase_client()
+    result = (
+        client.table("drafts")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return result.data

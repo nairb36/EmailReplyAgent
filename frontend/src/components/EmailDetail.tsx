@@ -160,10 +160,14 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
 
       {draft && (
         <DraftEditor
-          draft={draft.draft_body}
+          draftId={draft.draft_id}
+          originalDraft={draft.draft_body}
           subject={draft.subject}
           toAddress={draft.to_address}
+          threadId={draft.thread_id}
+          messageId={draft.message_id}
           onClose={() => setDraft(null)}
+          onSent={() => setDraft(null)}
         />
       )}
     </div>
