@@ -16,3 +16,10 @@ export interface EmailListResponse {
   messages: EmailSummary[];
   next_page_token?: string;
 }
+
+export interface DraftResponse {
+  message_id: string;
+  draft_body: string;
+  subject: string;
+  to_address: string;
+}
