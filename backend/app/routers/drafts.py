@@ -41,36 +41,41 @@ async def generate_draft(
             detail=f"Failed to fetch email: {str(e)}",
         )
 
-    # RAG: retrieve relevant knowledge base context
+    # RAG: retrieve relevant knowledge base context (requires OpenAI for embeddings)
     rag_context = None
-    try:
-        query_text = f"{email_detail.subject}\n{email_detail.body_text}"
-        query_embedding = embedding_service.get_embedding(
-            api_key=request.openai_api_key,
-            text=query_text,
-        )
-        rag_results = supabase_service.search_kb(
-            user_id=user["id"],
-            query_embedding=query_embedding,
-        )
-        if rag_results:
-            rag_context = [
-                {"title": r["title"], "content": r["content"]}
-                for r in rag_results
-            ]
-    except Exception:
-        pass  # RAG is best-effort; continue without it
+    embedding_key = request.openai_api_key
+    if not embedding_key and request.provider == "openai":
+        embedding_key = request.api_key
+    if embedding_key:
+        try:
+            query_text = f"{email_detail.subject}\n{email_detail.body_text}"
+            query_embedding = embedding_service.get_embedding(
+                api_key=embedding_key,
+                text=query_text,
+            )
+            rag_results = supabase_service.search_kb(
+                user_id=user["id"],
+                query_embedding=query_embedding,
+            )
+            if rag_results:
+                rag_context = [
+                    {"title": r["title"], "content": r["content"]}
+                    for r in rag_results
+                ]
+        except Exception:
+            pass  # RAG is best-effort; continue without it
 
     # Generate the draft reply
     try:
         result = llm_service.generate_draft(
-            api_key=request.openai_api_key,
+            api_key=request.api_key,
             from_address=email_detail.from_address,
             to_address=email_detail.to_address,
             subject=email_detail.subject,
             body_text=email_detail.body_text,
             user_name=user.get("name"),
             rag_context=rag_context,
+            provider=request.provider,
         )
         draft_body = result["draft"]
         llm_context = result["llm_context"]

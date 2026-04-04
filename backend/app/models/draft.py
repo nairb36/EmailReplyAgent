@@ -3,7 +3,9 @@ from pydantic import BaseModel
 
 class DraftRequest(BaseModel):
     message_id: str
-    openai_api_key: str
+    api_key: str
+    provider: str = "openai"  # "openai", "anthropic", or "gemini"
+    openai_api_key: str | None = None  # for RAG embeddings (optional, falls back to api_key if provider is openai)
 
 
 class DraftResponse(BaseModel):

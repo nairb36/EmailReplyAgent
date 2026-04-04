@@ -7,6 +7,12 @@ import { apiFetch } from "@/lib/api";
 import DraftEditor from "./DraftEditor";
 import LlmContextPanel from "./LlmContextPanel";
 
+const PROVIDERS = [
+  { id: "openai", label: "OpenAI", storageKey: "openai_api_key" },
+  { id: "anthropic", label: "Anthropic", storageKey: "anthropic_api_key" },
+  { id: "gemini", label: "Gemini", storageKey: "gemini_api_key" },
+];
+
 interface EmailDetailProps {
   email: EmailDetailType | null;
   loading: boolean;
@@ -17,6 +23,8 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
   const [draft, setDraft] = useState<DraftResponse | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [provider, setProvider] = useState("openai");
+  const [showProviderMenu, setShowProviderMenu] = useState(false);
 
   // Clear draft when switching emails
   useEffect(() => {
@@ -24,26 +32,37 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
     setDraftError(null);
   }, [email?.id]);
 
+  function getSelectedProvider() {
+    return PROVIDERS.find((p) => p.id === provider)!;
+  }
+
   async function handleGenerateDraft() {
     if (!email || !session?.backendToken) return;
 
-    const apiKey = localStorage.getItem("openai_api_key");
+    const selected = getSelectedProvider();
+    const apiKey = localStorage.getItem(selected.storageKey);
     if (!apiKey) {
       setDraftError(
-        'No OpenAI API key set. Click "API Key" in the navbar to add one.'
+        `No ${selected.label} API key set. Click "API Key" in the navbar to add one.`
       );
       return;
     }
 
+    // For RAG embeddings, we need an OpenAI key if using a non-OpenAI provider
+    const openaiKey = localStorage.getItem("openai_api_key");
+
     setGeneratingDraft(true);
     setDraftError(null);
+    setShowProviderMenu(false);
     try {
       const data = await apiFetch<DraftResponse>("/api/drafts", {
         method: "POST",
         token: session.backendToken,
         body: JSON.stringify({
           message_id: email.id,
-          openai_api_key: apiKey,
+          api_key: apiKey,
+          provider: provider,
+          openai_api_key: provider !== "openai" ? openaiKey : undefined,
         }),
       });
       setDraft(data);
@@ -101,25 +120,75 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white leading-tight">
             {email.subject}
           </h2>
-          <button
-            onClick={handleGenerateDraft}
-            disabled={generatingDraft}
-            className="flex-shrink-0 ml-4 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-indigo-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {generatingDraft ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-                </svg>
-                Generate Reply
-              </>
+          <div className="flex-shrink-0 ml-4 flex items-center gap-0 relative">
+            {/* Generate button */}
+            <button
+              onClick={handleGenerateDraft}
+              disabled={generatingDraft}
+              className="inline-flex items-center gap-2 rounded-l-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-indigo-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingDraft ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                  Generate
+                </>
+              )}
+            </button>
+            {/* Provider dropdown toggle */}
+            <button
+              onClick={() => setShowProviderMenu(!showProviderMenu)}
+              disabled={generatingDraft}
+              className="inline-flex items-center gap-1 rounded-r-lg bg-gradient-to-r from-blue-600 to-blue-700 px-2.5 py-2 text-sm font-medium text-white shadow-sm border-l border-blue-500 hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="text-xs">{getSelectedProvider().label}</span>
+              <svg className={`h-3 w-3 transition-transform ${showProviderMenu ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            {/* Dropdown menu */}
+            {showProviderMenu && (
+              <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
+                {PROVIDERS.map((p) => {
+                  const hasKey = typeof window !== "undefined" && !!localStorage.getItem(p.storageKey);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setProvider(p.id);
+                        setShowProviderMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
+                        provider === p.id
+                          ? "bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {p.label}
+                      <span className="flex items-center gap-1.5">
+                        {hasKey ? (
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        ) : (
+                          <span className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                        )}
+                        {provider === p.id && (
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </button>
+          </div>
         </div>
 
         {/* Metadata card */}

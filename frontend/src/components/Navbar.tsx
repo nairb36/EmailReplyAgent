@@ -13,12 +13,20 @@ export default function Navbar() {
   const [hasApiKey, setHasApiKey] = useState(false);
 
   useEffect(() => {
-    setHasApiKey(!!localStorage.getItem("openai_api_key"));
+    setHasApiKey(
+      !!localStorage.getItem("openai_api_key") ||
+      !!localStorage.getItem("anthropic_api_key") ||
+      !!localStorage.getItem("gemini_api_key")
+    );
   }, []);
 
   function handleCloseApiKey() {
     setShowApiKey(false);
-    setHasApiKey(!!localStorage.getItem("openai_api_key"));
+    setHasApiKey(
+      !!localStorage.getItem("openai_api_key") ||
+      !!localStorage.getItem("anthropic_api_key") ||
+      !!localStorage.getItem("gemini_api_key")
+    );
   }
 
   return (

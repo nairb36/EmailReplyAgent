@@ -11,3 +11,5 @@ cryptography==44.0.2
 PyJWT==2.10.1
 httpx==0.28.1
 openai==1.78.1
+anthropic==0.52.0
+google-generativeai==0.8.5
