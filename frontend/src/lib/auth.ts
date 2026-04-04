@@ -50,6 +50,15 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       session.backendToken = token.backendToken;
+      if (token.picture) {
+        session.user.image = token.picture;
+      }
+      if (token.name) {
+        session.user.name = token.name;
+      }
+      if (token.email) {
+        session.user.email = token.email;
+      }
       return session;
     },
   },
