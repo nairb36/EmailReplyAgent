@@ -1,4 +1,4 @@
-# CLAUDE.md — EmailReplyAgent
+# CLAUDE.md — MyMail
 
 ## Project Overview
 

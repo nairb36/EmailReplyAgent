@@ -32,3 +32,11 @@ export interface SendResponse {
   gmail_message_id: string;
   draft_id: string;
 }
+
+export interface FeedbackResponse {
+  id: string;
+  draft_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}

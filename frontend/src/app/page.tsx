@@ -26,7 +26,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="max-w-md text-center">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          EmailReplyAgent
+          MyMail
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
           AI-powered email replies for Gmail. Draft intelligent responses,

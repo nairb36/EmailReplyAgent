@@ -185,3 +185,34 @@ def search_kb(user_id: str, query_embedding: list[float], match_count: int = 3) 
         },
     ).execute()
     return result.data
+
+
+# --- Feedback ---
+
+
+def create_feedback(
+    user_id: str,
+    draft_id: str,
+    rating: int,
+    comment: str | None,
+) -> dict:
+    client = get_supabase_client()
+    payload = {
+        "user_id": user_id,
+        "draft_id": draft_id,
+        "rating": rating,
+        "comment": comment,
+    }
+    result = client.table("feedback").insert(payload).execute()
+    return result.data[0]
+
+
+def get_feedback_by_draft(draft_id: str) -> dict | None:
+    client = get_supabase_client()
+    result = (
+        client.table("feedback")
+        .select("*")
+        .eq("draft_id", draft_id)
+        .execute()
+    )
+    return result.data[0] if result.data else None

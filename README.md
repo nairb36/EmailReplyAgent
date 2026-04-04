@@ -1,1 +1,1 @@
-# EmailReplyAgent
+# MyMail

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/api";
+import FeedbackPanel from "./FeedbackPanel";
 import type { SendResponse } from "@/types/email";
 
 interface DraftEditorProps {
@@ -51,7 +52,6 @@ export default function DraftEditor({
         }),
       });
       setSent(true);
-      setTimeout(onSent, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send email");
     } finally {
@@ -61,13 +61,16 @@ export default function DraftEditor({
 
   if (sent) {
     return (
-      <div className="border-t-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-b from-emerald-50 dark:from-emerald-950 to-white dark:to-gray-900 p-6">
-        <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-lg font-semibold">Email sent successfully!</span>
+      <div>
+        <div className="border-t-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-b from-emerald-50 dark:from-emerald-950 to-white dark:to-gray-900 p-6">
+          <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-lg font-semibold">Email sent successfully!</span>
+          </div>
         </div>
+        <FeedbackPanel draftId={draftId} onDone={onSent} />
       </div>
     );
   }
