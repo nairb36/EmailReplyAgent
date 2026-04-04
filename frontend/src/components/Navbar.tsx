@@ -32,7 +32,7 @@ export default function Navbar() {
               </svg>
             </div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              EmailReply<span className="text-indigo-600 dark:text-indigo-400">Agent</span>
+              My<span className="text-indigo-600 dark:text-indigo-400">Mail</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">
