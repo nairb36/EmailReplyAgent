@@ -9,7 +9,8 @@ def generate_draft(
     body_text: str,
     user_name: str | None = None,
     rag_context: list[dict] | None = None,
-) -> str:
+) -> dict:
+    """Returns {"draft": str, "llm_context": str} with the reply and full prompt."""
     client = OpenAI(api_key=api_key)
 
     system_prompt = (
@@ -40,6 +41,9 @@ def generate_draft(
         f"{body_text}"
     )
 
+    # Build the full context string for transparency
+    llm_context = f"=== SYSTEM PROMPT ===\n{system_prompt}\n\n=== USER PROMPT ===\n{user_prompt}"
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -50,4 +54,5 @@ def generate_draft(
         max_tokens=1024,
     )
 
-    return response.choices[0].message.content or ""
+    draft = response.choices[0].message.content or ""
+    return {"draft": draft, "llm_context": llm_context}

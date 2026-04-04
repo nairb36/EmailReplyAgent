@@ -63,7 +63,7 @@ async def generate_draft(
 
     # Generate the draft reply
     try:
-        draft_body = llm_service.generate_draft(
+        result = llm_service.generate_draft(
             api_key=request.openai_api_key,
             from_address=email_detail.from_address,
             to_address=email_detail.to_address,
@@ -72,6 +72,8 @@ async def generate_draft(
             user_name=user.get("name"),
             rag_context=rag_context,
         )
+        draft_body = result["draft"]
+        llm_context = result["llm_context"]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -106,6 +108,7 @@ async def generate_draft(
         draft_body=draft_body,
         subject=subject,
         to_address=email_detail.from_address,
+        llm_context=llm_context,
     )
 
 

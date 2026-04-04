@@ -13,6 +13,7 @@ class DraftResponse(BaseModel):
     draft_body: str
     subject: str
     to_address: str
+    llm_context: str
 
 
 class SendRequest(BaseModel):

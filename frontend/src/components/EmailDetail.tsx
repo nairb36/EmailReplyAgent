@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { EmailDetail as EmailDetailType, DraftResponse } from "@/types/email";
 import { apiFetch } from "@/lib/api";
 import DraftEditor from "./DraftEditor";
+import LlmContextPanel from "./LlmContextPanel";
 
 interface EmailDetailProps {
   email: EmailDetailType | null;
@@ -157,6 +158,8 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
           {email.body_text}
         </div>
       </div>
+
+      {draft && <LlmContextPanel context={draft.llm_context} />}
 
       {draft && (
         <DraftEditor

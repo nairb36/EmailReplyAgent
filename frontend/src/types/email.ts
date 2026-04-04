@@ -24,6 +24,7 @@ export interface DraftResponse {
   draft_body: string;
   subject: string;
   to_address: string;
+  llm_context: string;
 }
 
 export interface SendResponse {
