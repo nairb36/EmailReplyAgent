@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_current_user
 from app.models.draft import DraftRequest, DraftResponse, SendRequest, SendResponse
-from app.services import auth_service, gmail_service, llm_service, supabase_service
+from app.services import auth_service, embedding_service, gmail_service, llm_service, supabase_service
 
 router = APIRouter(prefix="/api/drafts", tags=["drafts"])
 
@@ -41,6 +41,26 @@ async def generate_draft(
             detail=f"Failed to fetch email: {str(e)}",
         )
 
+    # RAG: retrieve relevant knowledge base context
+    rag_context = None
+    try:
+        query_text = f"{email_detail.subject}\n{email_detail.body_text}"
+        query_embedding = embedding_service.get_embedding(
+            api_key=request.openai_api_key,
+            text=query_text,
+        )
+        rag_results = supabase_service.search_kb(
+            user_id=user["id"],
+            query_embedding=query_embedding,
+        )
+        if rag_results:
+            rag_context = [
+                {"title": r["title"], "content": r["content"]}
+                for r in rag_results
+            ]
+    except Exception:
+        pass  # RAG is best-effort; continue without it
+
     # Generate the draft reply
     try:
         draft_body = llm_service.generate_draft(
@@ -50,6 +70,7 @@ async def generate_draft(
             subject=email_detail.subject,
             body_text=email_detail.body_text,
             user_name=user.get("name"),
+            rag_context=rag_context,
         )
     except Exception as e:
         raise HTTPException(

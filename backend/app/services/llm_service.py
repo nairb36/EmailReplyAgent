@@ -8,6 +8,7 @@ def generate_draft(
     subject: str,
     body_text: str,
     user_name: str | None = None,
+    rag_context: list[dict] | None = None,
 ) -> str:
     client = OpenAI(api_key=api_key)
 
@@ -21,6 +22,16 @@ def generate_draft(
     )
     if user_name:
         system_prompt += f"\n\nThe user's name is {user_name}."
+
+    if rag_context:
+        context_text = "\n\n---\n\n".join(
+            f"**{item['title']}**\n{item['content']}" for item in rag_context
+        )
+        system_prompt += (
+            "\n\nUse the following knowledge base context to inform your reply. "
+            "Only use information that is relevant to the email:\n\n"
+            f"{context_text}"
+        )
 
     user_prompt = (
         f"Please draft a reply to the following email:\n\n"

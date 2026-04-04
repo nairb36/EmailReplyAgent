@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LoginButton from "./LoginButton";
 import ApiKeyInput from "./ApiKeyInput";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [showApiKey, setShowApiKey] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
 
@@ -32,6 +35,27 @@ export default function Navbar() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                pathname === "/dashboard"
+                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Inbox
+            </Link>
+            <Link
+              href="/knowledge"
+              className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                pathname === "/knowledge"
+                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Knowledge Base
+            </Link>
+            <div className="w-px h-6 bg-gray-200" />
             <button
               onClick={() => setShowApiKey(true)}
               className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
