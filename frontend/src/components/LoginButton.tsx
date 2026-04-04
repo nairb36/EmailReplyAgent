@@ -7,7 +7,7 @@ export default function LoginButton() {
 
   if (status === "loading") {
     return (
-      <div className="h-9 w-24 animate-pulse rounded-md bg-gray-200" />
+      <div className="h-9 w-24 animate-pulse rounded-md bg-gray-200 dark:bg-gray-700" />
     );
   }
 
@@ -21,10 +21,10 @@ export default function LoginButton() {
             className="h-8 w-8 rounded-full"
           />
         )}
-        <span className="text-sm text-gray-700">{session.user?.name}</span>
+        <span className="text-sm text-gray-700 dark:text-gray-300">{session.user?.name}</span>
         <button
           onClick={() => signOut()}
-          className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+          className="rounded-md bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
           Sign out
         </button>

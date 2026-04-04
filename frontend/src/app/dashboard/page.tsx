@@ -67,26 +67,26 @@ export default function Dashboard() {
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         {/* Email List */}
-        <div className="w-[380px] flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
+        <div className="w-[380px] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-y-auto">
           {loadingEmails ? (
             <div className="p-4 space-y-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="animate-pulse space-y-2">
                   <div className="flex justify-between">
-                    <div className="h-4 bg-gray-200 rounded w-1/3" />
-                    <div className="h-3 bg-gray-200 rounded w-16" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
                   </div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
-                  <div className="h-3 bg-gray-200 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
                 </div>
               ))}
             </div>
           ) : error && emails.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-3 text-sm text-blue-600 hover:underline"
+                className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Try again
               </button>
@@ -101,7 +101,7 @@ export default function Dashboard() {
         </div>
 
         {/* Email Detail */}
-        <div className="flex-1 bg-gray-50 overflow-y-auto">
+        <div className="flex-1 bg-gray-50 dark:bg-gray-950 overflow-y-auto">
           <EmailDetailComponent email={emailDetail} loading={loadingDetail} />
         </div>
       </div>

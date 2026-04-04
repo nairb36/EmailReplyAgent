@@ -57,7 +57,7 @@ export default function EmailList({
 }: EmailListProps) {
   if (emails.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+      <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
         <svg className="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" />
         </svg>
@@ -67,7 +67,7 @@ export default function EmailList({
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 dark:divide-gray-800">
       {emails.map((email) => {
         const isSelected = selectedId === email.id;
         return (
@@ -76,8 +76,8 @@ export default function EmailList({
             onClick={() => onSelect(email.id)}
             className={`w-full text-left px-4 py-3.5 transition-colors ${
               isSelected
-                ? "bg-indigo-50 border-l-3 border-indigo-600"
-                : "hover:bg-gray-50 border-l-3 border-transparent"
+                ? "bg-indigo-50 dark:bg-indigo-950/50 border-l-3 border-indigo-600"
+                : "hover:bg-gray-50 dark:hover:bg-gray-800 border-l-3 border-transparent"
             }`}
           >
             <div className="flex gap-3">
@@ -90,17 +90,17 @@ export default function EmailList({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className={`text-sm truncate max-w-[70%] ${isSelected ? "font-semibold text-indigo-900" : "font-medium text-gray-900"}`}>
+                  <span className={`text-sm truncate max-w-[70%] ${isSelected ? "font-semibold text-indigo-900 dark:text-indigo-300" : "font-medium text-gray-900 dark:text-gray-100"}`}>
                     {extractName(email.from_address)}
                   </span>
-                  <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2">
                     {formatDate(email.received_at)}
                   </span>
                 </div>
-                <div className={`text-sm truncate ${isSelected ? "text-indigo-800" : "text-gray-700"}`}>
+                <div className={`text-sm truncate ${isSelected ? "text-indigo-800 dark:text-indigo-200" : "text-gray-700 dark:text-gray-300"}`}>
                   {email.subject}
                 </div>
-                <div className="text-xs text-gray-400 truncate mt-0.5">
+                <div className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
                   {email.snippet}
                 </div>
               </div>
