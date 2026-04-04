@@ -41,8 +41,14 @@ export default function ApiKeyInput({ onClose }: ApiKeyInputProps) {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           API Keys
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
           Keys are stored in your browser only. Add at least one to generate drafts.
+        </p>
+        <p className="text-xs text-amber-600 dark:text-amber-400 mb-5 flex items-center gap-1.5">
+          <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          OpenAI key is required for Knowledge Base (RAG) features, even when using other providers.
         </p>
         <div className="space-y-4">
           {PROVIDERS.map((p) => (

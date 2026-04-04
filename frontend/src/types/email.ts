@@ -17,6 +17,21 @@ export interface EmailListResponse {
   next_page_token?: string;
 }
 
+export interface ThreadMessage {
+  id: string;
+  from_address: string;
+  to_address?: string;
+  subject: string;
+  body_text: string;
+  received_at: string;
+  is_sent: boolean;
+}
+
+export interface ThreadResponse {
+  thread_id: string;
+  messages: ThreadMessage[];
+}
+
 export interface DraftResponse {
   draft_id: string;
   message_id: string;

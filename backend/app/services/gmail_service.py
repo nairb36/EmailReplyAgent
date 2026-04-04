@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build, Resource
 
-from app.models.email import EmailDetail, EmailSummary
+from app.models.email import EmailDetail, EmailSummary, ThreadMessage
 
 
 def build_gmail_client(access_token: str) -> Resource:
@@ -159,6 +159,44 @@ def send_reply(
         .execute()
     )
     return result
+
+
+def fetch_thread(access_token: str, thread_id: str, user_email: str) -> list[ThreadMessage]:
+    """Fetch all messages in a thread."""
+    service = build_gmail_client(access_token)
+    thread = service.users().threads().get(userId="me", id=thread_id, format="full").execute()
+
+    messages: list[ThreadMessage] = []
+    for msg in thread.get("messages", []):
+        payload = msg.get("payload", {})
+        headers = _parse_email_headers(payload.get("headers", []))
+
+        received_at = headers.get("date", "")
+        try:
+            parsed_dt = email.utils.parsedate_to_datetime(received_at)
+            received_at = parsed_dt.astimezone(timezone.utc).isoformat()
+        except (ValueError, TypeError):
+            pass
+
+        body_text = _parse_mime_body(payload)
+        from_addr = headers.get("from", "")
+
+        # Determine if this message was sent by the user
+        is_sent = user_email.lower() in from_addr.lower()
+
+        messages.append(
+            ThreadMessage(
+                id=msg["id"],
+                from_address=from_addr,
+                to_address=headers.get("to"),
+                subject=headers.get("subject", "(no subject)"),
+                body_text=body_text,
+                received_at=received_at,
+                is_sent=is_sent,
+            )
+        )
+
+    return messages
 
 
 def fetch_email_detail(access_token: str, message_id: str) -> EmailDetail:

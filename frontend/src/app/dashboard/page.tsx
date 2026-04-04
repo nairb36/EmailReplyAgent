@@ -6,13 +6,14 @@ import Navbar from "@/components/Navbar";
 import EmailList from "@/components/EmailList";
 import EmailDetailComponent from "@/components/EmailDetail";
 import { apiFetch } from "@/lib/api";
-import type { EmailSummary, EmailDetail, EmailListResponse } from "@/types/email";
+import type { EmailSummary, EmailDetail, EmailListResponse, ThreadResponse } from "@/types/email";
 
 export default function Dashboard() {
   const { data: session, status } = useSession({ required: true });
   const [emails, setEmails] = useState<EmailSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [emailDetail, setEmailDetail] = useState<EmailDetail | null>(null);
+  const [thread, setThread] = useState<ThreadResponse | null>(null);
   const [loadingEmails, setLoadingEmails] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +43,18 @@ export default function Dashboard() {
     if (!session?.backendToken) return;
     setSelectedId(id);
     setLoadingDetail(true);
+    setThread(null);
     try {
-      const detail = await apiFetch<EmailDetail>(`/api/emails/${id}`, {
-        token: session.backendToken,
-      });
+      const [detail, threadData] = await Promise.all([
+        apiFetch<EmailDetail>(`/api/emails/${id}`, {
+          token: session.backendToken,
+        }),
+        apiFetch<ThreadResponse>(`/api/emails/${id}/thread`, {
+          token: session.backendToken,
+        }).catch(() => null),
+      ]);
       setEmailDetail(detail);
+      setThread(threadData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch email");
     } finally {
@@ -102,7 +110,7 @@ export default function Dashboard() {
 
         {/* Email Detail */}
         <div className="flex-1 bg-gray-50 dark:bg-gray-950 overflow-y-auto">
-          <EmailDetailComponent email={emailDetail} loading={loadingDetail} />
+          <EmailDetailComponent email={emailDetail} loading={loadingDetail} thread={thread} />
         </div>
       </div>
     </div>

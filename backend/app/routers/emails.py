@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.dependencies import get_current_user
-from app.models.email import EmailDetail, EmailSummary
+from app.models.email import EmailDetail, EmailSummary, ThreadResponse
 from app.services import auth_service, gmail_service
 
 router = APIRouter(prefix="/api/emails", tags=["emails"])
@@ -78,3 +78,59 @@ async def get_email_detail(
         )
 
     return email_detail
+
+
+@router.get("/{message_id}/thread", response_model=ThreadResponse)
+async def get_email_thread(
+    message_id: str,
+    user: dict = Depends(get_current_user),
+):
+    encrypted_token = user.get("google_access_token")
+    if not encrypted_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No Google access token found",
+        )
+
+    try:
+        access_token = auth_service.decrypt_token(encrypted_token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Failed to decrypt access token",
+        )
+
+    # First get the email to find its thread_id
+    try:
+        email_detail = gmail_service.fetch_email_detail(
+            access_token=access_token,
+            message_id=message_id,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch email: {str(e)}",
+        )
+
+    if not email_detail.thread_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No thread found for this email",
+        )
+
+    try:
+        thread_messages = gmail_service.fetch_thread(
+            access_token=access_token,
+            thread_id=email_detail.thread_id,
+            user_email=user.get("email", ""),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch thread: {str(e)}",
+        )
+
+    return ThreadResponse(
+        thread_id=email_detail.thread_id,
+        messages=thread_messages,
+    )

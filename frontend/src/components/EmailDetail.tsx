@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { EmailDetail as EmailDetailType, DraftResponse } from "@/types/email";
+import { EmailDetail as EmailDetailType, DraftResponse, ThreadResponse } from "@/types/email";
 import { apiFetch } from "@/lib/api";
 import DraftEditor from "./DraftEditor";
 import LlmContextPanel from "./LlmContextPanel";
@@ -16,9 +16,10 @@ const PROVIDERS = [
 interface EmailDetailProps {
   email: EmailDetailType | null;
   loading: boolean;
+  thread?: ThreadResponse | null;
 }
 
-export default function EmailDetail({ email, loading }: EmailDetailProps) {
+export default function EmailDetail({ email, loading, thread }: EmailDetailProps) {
   const { data: session } = useSession();
   const [draft, setDraft] = useState<DraftResponse | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState(false);
@@ -102,15 +103,25 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
     );
   }
 
-  const date = new Date(email.received_at);
-  const formattedDate = date.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Use thread messages if available, otherwise fall back to single email
+  const hasThread = thread && thread.messages.length > 1;
+
+  function formatMessageDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function extractName(from: string): string {
+    const match = from.match(/^"?([^"<]+)"?\s*</);
+    return match ? match[1].trim() : from.split("@")[0];
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -191,28 +202,6 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
           </div>
         </div>
 
-        {/* Metadata card */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6 border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-              {email.from_address.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {email.from_address}
-              </div>
-              {email.to_address && (
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  To: {email.to_address}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 ml-[52px]">
-            {formattedDate}
-          </div>
-        </div>
-
         {draftError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
             <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -222,10 +211,80 @@ export default function EmailDetail({ email, loading }: EmailDetailProps) {
           </div>
         )}
 
-        {/* Email body */}
-        <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-          {email.body_text}
-        </div>
+        {/* Thread / Conversation View */}
+        {hasThread ? (
+          <div className="space-y-4">
+            {thread!.messages.map((msg, idx) => (
+              <div
+                key={msg.id}
+                className={`rounded-lg border p-4 ${
+                  msg.is_sent
+                    ? "bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 ml-8"
+                    : "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 mr-8"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${
+                      msg.is_sent
+                        ? "bg-gradient-to-br from-indigo-500 to-violet-500"
+                        : "bg-gradient-to-br from-indigo-500 to-blue-500"
+                    }`}
+                  >
+                    {extractName(msg.from_address).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {msg.is_sent ? "You" : extractName(msg.from_address)}
+                      </span>
+                      {msg.is_sent && (
+                        <span className="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-medium">
+                          Sent
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatMessageDate(msg.received_at)}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed ml-11">
+                  {msg.body_text}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Single email view (fallback) */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6 border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                  {email.from_address.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {email.from_address}
+                  </div>
+                  {email.to_address && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      To: {email.to_address}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 ml-[52px]">
+                {formatMessageDate(email.received_at)}
+              </div>
+            </div>
+
+            {/* Email body */}
+            <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+              {email.body_text}
+            </div>
+          </>
+        )}
       </div>
 
       {draft && <LlmContextPanel context={draft.llm_context} />}
