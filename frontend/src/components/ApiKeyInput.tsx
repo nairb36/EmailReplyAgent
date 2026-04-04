@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PROVIDER_LOGOS } from "./ProviderLogos";
 
 interface ApiKeyInputProps {
   onClose: () => void;
@@ -51,9 +52,12 @@ export default function ApiKeyInput({ onClose }: ApiKeyInputProps) {
           OpenAI key is required for Knowledge Base (RAG) features, even when using other providers.
         </p>
         <div className="space-y-4">
-          {PROVIDERS.map((p) => (
+          {PROVIDERS.map((p) => {
+            const Logo = PROVIDER_LOGOS[p.id];
+            return (
             <div key={p.id}>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {Logo && <Logo className="h-4 w-4" />}
                 {p.label}
                 {keys[p.id]?.trim() ? (
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
@@ -71,7 +75,8 @@ export default function ApiKeyInput({ onClose }: ApiKeyInputProps) {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button

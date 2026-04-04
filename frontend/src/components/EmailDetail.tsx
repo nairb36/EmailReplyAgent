@@ -6,6 +6,7 @@ import { EmailDetail as EmailDetailType, DraftResponse, ThreadResponse } from "@
 import { apiFetch } from "@/lib/api";
 import DraftEditor from "./DraftEditor";
 import LlmContextPanel from "./LlmContextPanel";
+import { PROVIDER_LOGOS } from "./ProviderLogos";
 
 const PROVIDERS = [
   { id: "openai", label: "OpenAI", storageKey: "openai_api_key" },
@@ -158,6 +159,7 @@ export default function EmailDetail({ email, loading, thread }: EmailDetailProps
               disabled={generatingDraft}
               className="inline-flex items-center gap-1 rounded-r-lg bg-gradient-to-r from-blue-600 to-blue-700 px-2.5 py-2 text-sm font-medium text-white shadow-sm border-l border-blue-500 hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {(() => { const Logo = PROVIDER_LOGOS[provider]; return Logo ? <Logo className="h-3.5 w-3.5" /> : null; })()}
               <span className="text-xs">{getSelectedProvider().label}</span>
               <svg className={`h-3 w-3 transition-transform ${showProviderMenu ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -168,6 +170,7 @@ export default function EmailDetail({ email, loading, thread }: EmailDetailProps
               <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                 {PROVIDERS.map((p) => {
                   const hasKey = typeof window !== "undefined" && !!localStorage.getItem(p.storageKey);
+                  const Logo = PROVIDER_LOGOS[p.id];
                   return (
                     <button
                       key={p.id}
@@ -181,7 +184,10 @@ export default function EmailDetail({ email, loading, thread }: EmailDetailProps
                           : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      {p.label}
+                      <span className="flex items-center gap-2">
+                        {Logo && <Logo className="h-4 w-4" />}
+                        {p.label}
+                      </span>
                       <span className="flex items-center gap-1.5">
                         {hasKey ? (
                           <span className="h-2 w-2 rounded-full bg-emerald-500" />
